@@ -157,7 +157,6 @@ var rxe = (function() {
 
         if (this.exists() && isId) {
           throw "Element already exists in dom";
-          //$(this.element).html(html);
         }
         if ((this.exists() && !isId) || !this.exists()) {
           var name = this.element.substring(1, this.element.length);

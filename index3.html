@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/5.4.3/Rx.js"></script>
+    <script src="https://unpkg.com/rxe"></script>
+    <script>
+      rxe.event.on("error", function(data) {
+          // get all errors in the system
+      });
+      rxe.event.on("someEvent", function(data) {
+          // get all data sent to 'someEvent'
+      });
+      rxe.event.for("me").on("someEvent", function(data) {
+         // get all data sent to 'someEvent' meant specifically for 'me'
+      });
+      rxe.event.send("someEvent", "some data"); // send data to all 'someEvent' subscribers
+      rxe.event.for("me").send("someEvent", "some data");  // send data to all 'someEvent' subscribers who are 'me'
+    </script>
+  </body>
+</html>
