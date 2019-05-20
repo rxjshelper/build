@@ -1,6 +1,6 @@
 {
   "name": "rxe",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "some rxjs helper",
   "main": "index.js",
   "scripts": {

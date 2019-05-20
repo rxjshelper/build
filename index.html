@@ -1,24 +1,9 @@
 <!DOCTYPE html>
 <html>
-<body>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/5.4.3/Rx.js"></script>
-<script src="index.js"></script>
-<script>
-    rxe.on("name",function(data){
-        console.log(JSON.stringify(data));
-    });
-   
-    rxe.send("name",{
-        myEvent :  "boo1"
-    });
-    
-    rxe.send("name",{
-        myEvent :  "boo2"
-    });
-    
-    rxe.send("name",{
-        myEvent :  "boo3"
-    });
-</script>
-</body>
+  <body>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.2.6/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/5.4.3/Rx.js"></script>
+    <script src="index.js"></script>
+    <script src="app.js">  </script>
+  </body>
 </html>
