@@ -1,3 +1,4 @@
+rxe.options.stopIfErrorOccurs = false;
 rxe.dom("orderNumber", ".OrdNum");
 rxe.event.on("name", function(data, meta, strategy) {
   rxe.dom.orderNumber.create("div", data.myEvent);

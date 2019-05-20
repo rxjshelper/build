@@ -58,6 +58,9 @@ var rxe = (function() {
                       data: val
                     });
                   if (name !== "error") {
+                    if(options.stopIfErrorOccurs){
+                         throw error;
+                    }                 
                   }
                 }
               }
@@ -121,118 +124,153 @@ var rxe = (function() {
 
     return this;
   };
+var extendDom = [];
+var options ={
+  stopIfErrorOccurs : false
+}
+var addDomExtension = function(name, f){
+extendDom.push({
+  name: name,
+  body: function(arg1,arg2) {
+    var context = this;;
+    return this.handle(function(elm, set) {      
+      var result = f(context,$(context.getElement()), arg1, arg2);
+      set.update = elm;
+      return result;
+    });
+  }
+});
+};
+
+var createDomEvents = function(name, el){
+  var evnt = {
+    element: el,
+    getElement:function(){
+      if (this.exists()) {
+        return $(this.element);
+      } else {
+        return $(this.shadow);
+      }
+    },
+    shadow: "",
+    handle: function(f) {
+      var set = {};
+      if (this.exists()) {
+        var result = f(this.getElement(), set);
+        return result;
+      } else {
+        var result = f(this.getElement(), set);
+        this.shadow = set.update.rxeOuterHTML();
+        return result;
+      }
+    },
+    existsInShadow: function() {
+      return $(this.element).size() > 0;
+    },
+    exists: function() {
+      return $(this.element).size() > 0;
+    },
+    createRaw: function(html) {
+      var isId = true;
+      if (this.element.indexOf(".") == 0) {
+        isId = false;
+      } else if (this.element.indexOf("#") == 0) {
+        isId = true;
+      } else {
+        throw "Element must be a class or an id";
+      }
+
+      if (this.exists() && isId) {
+        throw "Element already exists in dom";
+      }
+      if ((this.exists() && !isId) || !this.exists()) {
+        var name = this.element.substring(1, this.element.length);
+        this.shadow = html;
+        if (!isId) {
+          this.shadow = $(this.shadow)
+            .addClass(name)
+            .rxeOuterHTML();
+        } else {
+          this.shadow = $(this.shadow)
+            .attr("id", name)
+            .rxeOuterHTML();
+        }
+      }
+    },
+    create: function(el, html) {
+      if (el && html) this.createRaw("<" + el + ">" + html + "</" + el + ">");
+      else throw "Unable to create element with " + el + " and " + html;
+    },
+    insertReplace: function(el) {
+      $(el).html(this.getOuterHtml());
+    },
+    insertAppend: function(el) {
+      $(el).append(this.getOuterHtml());
+    },
+    
+    insertAfter: function(el) {
+      $(el).insertAfter(this.getOuterHtml());
+    },
+    insertBefore: function(el) {
+      $(el).insertBefore(this.getOuterHtml());
+    },
+    replaceWith: function(el) {
+      $(el).replaceWith(this.getOuterHtml());
+    }
+  };
+
+$.each(extendDom, function(index, value) {
+  evnt[value.name] = value.body;
+});
+  return evnt;
+};
+
   var dom = function(name, el) {
     if (dom[name]) {
       throw "Dom mapping already contains name " + name;
     }
-    dom[name] = {
-      element: el,
-      shadow: "",
-      handle: function(f) {
-        var set = {};
-        if (this.exists()) {
-          var result = f($(this.element), set);
-          return result;
-        } else {
-          var result = f($(this.shadow), set);
-          this.shadow = set.update.rxeOuterHTML();
-          return result;
-        }
-      },
-      existsInShadow: function() {
-        return $(this.element).size() > 0;
-      },
-      exists: function() {
-        return $(this.element).size() > 0;
-      },
-      createRaw: function(html) {
-        var isId = true;
-        if (this.element.indexOf(".") == 0) {
-          isId = false;
-        } else if (this.element.indexOf("#") == 0) {
-          isId = true;
-        } else {
-          throw "Element must be a class or an id";
-        }
-
-        if (this.exists() && isId) {
-          throw "Element already exists in dom";
-        }
-        if ((this.exists() && !isId) || !this.exists()) {
-          var name = this.element.substring(1, this.element.length);
-          this.shadow = html;
-          if (!isId) {
-            this.shadow = $(this.shadow)
-              .addClass(name)
-              .rxeOuterHTML();
-          } else {
-            this.shadow = $(this.shadow)
-              .attr("id", name)
-              .rxeOuterHTML();
-          }
-        }
-      },
-      create: function(el, html) {
-        if (el && html) this.createRaw("<" + el + ">" + html + "</" + el + ">");
-        else throw "Unable to create element with " + el + " and " + html;
-      },
-      insertReplace: function(el) {
-        $(el).html(this.getOuterHtml());
-      },
-      insertAppend: function(el) {
-        $(el).append(this.getOuterHtml());
-      },
-      insertPrepend: function(el) {
-        var result = this.getOuterHtml();
-        $(el).prepend(result);
-      },
-      insertAfter: function(el) {
-        $(el).insertAfter(this.getOuterHtml());
-      },
-      insertBefore: function(el) {
-        $(el).insertBefore(this.getOuterHtml());
-      },
-      replaceWith: function(el) {
-        $(el).replaceWith(this.getOuterHtml());
-      },
-      enable: function() {
-        return this.handle(function(elm, set) {
-          elm.prop("disabled", false);
-          set.update = elm;
-          return result;
-        });
-      },
-      disable: function() {
-        return this.handle(function(elm, set) {
-          elm.prop("disabled", true);
-          set.update = elm;
-        });
-      },
-      setHtml: function(h) {
-        return this.handle(function(elm, set) {
-          elm.html(h);
-          set.update = elm;
-        });
-      },
-      getHtml: function(h) {
-        return this.handle(function(elm, set) {
-          var result = elm.html();
-          set.update = elm;
-          return result;
-        });
-      },
-      getOuterHtml: function(h) {
-        return this.handle(function(elm, set) {
-          var result = elm.rxeOuterHTML();
-          set.update = elm;
-          return result;
-        });
-      }
-    };
+    dom[name] = createDomEvents(name, el);
   };
+addDomExtension("replaceWith", function(context, elm, arg) {
+  var elm = $(context.getElement());
+  $(el).replaceWith(this.getOuterHtml());
+});
+   addDomExtension("getOuterHtml", function(context, elm, arg) {
+    
+     var result = elm.rxeOuterHTML();
+     return result;
+   });
+   addDomExtension("setHtml", function(context, elm, arg) {
+     var result = elm.html(arg);
+     return result;
+   });
+  addDomExtension("getHtml", function(context, elm, arg) {
+   
+    var result = elm.html();
+    return result;
+  });
+  addDomExtension("disable", function(context, elm, arg) {
+   
+    elm.prop("disabled", true);
+  });
+  addDomExtension("enable", function(context, elm, arg) {
+   
+    elm.prop("disabled", false);
+  });
+ 
+ 
+
+  addDomExtension("insertPrepend", function(context,elm,arg) {
+    var result = context.getOuterHtml();
+  
+    $(arg).prepend(result);
+    return result;
+  });
 
   return {
     event: event,
-    dom: dom
+    dom: dom,
+    addDomExtension: addDomExtension,
+    options
   };
 })();
